@@ -1,6 +1,11 @@
 let http = require('http')
 let request = require('request')
-let destinationUrl = 'http://127.0.0.1:8000'
+let argv = require('yargs')
+	.default('host', '127.0.0.1')
+	.argv
+let scheme = 'http://'
+let port = argv.port || argv.host === '127.0.0.1' ? 8000 : 80
+let destinationUrl = scheme + argv.host + ':' + port
 
 http.createServer((req, res) => {
 	for (let header in req.headers) {
