@@ -1,23 +1,25 @@
 let http = require('http')
+let fs = require('fs')
 let request = require('request')
+let through = require('through')
 let argv = require('yargs')
 	.default('host', '127.0.0.1')
 	.argv
 let scheme = 'http://'
 let port = argv.port || argv.host === '127.0.0.1' ? 8000 : 80
 let destinationUrl = argv.url || scheme + argv.host + ':' + port
+let logStream = argv.logpath ? fs.createWriteStream(argv.logpath) : process.stdout
 
 http.createServer((req, res) => {
-	console.log('\nEcho request: \n', JSON.stringify(req.headers))
+	logStream.write('\nEcho request: \n' + JSON.stringify(req.headers))
 	for (let header in req.headers) {
 		res.setHeader(header, req.headers[header])
 	}
-	req.pipe(process.stdout)
+	through(req, logStream, {autoDestroy: false})
 	req.pipe(res)
 }).listen(8000)
 
-console.log('Listening at http://127.0.0.1:8000')
-
+logStream.write('Listening at http://127.0.0.1:8000')
 
 http.createServer((req, res) => {
 	let url = destinationUrl
@@ -29,12 +31,12 @@ http.createServer((req, res) => {
 		url: url + req.url
 	}
 
-	console.log('\nProxy request: \n', JSON.stringify(req.headers))
-	req.pipe(process.stdout)
+	logStream.write('\nProxy request: \n' + JSON.stringify(req.headers))
+	through(req, logStream, {autoDestroy: false})
 
 	let destinationResponse = req.pipe(request(options))
 
-	console.log(JSON.stringify(destinationResponse.headers))
+	logStream.write(JSON.stringify(destinationResponse.headers))
 	destinationResponse.pipe(res)
-	destinationResponse.pipe(process.stdout)
+	through(destinationResponse, logStream, {autoDestroy: false})
 }).listen(8001)
