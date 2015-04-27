@@ -5,7 +5,7 @@ let argv = require('yargs')
 	.argv
 let scheme = 'http://'
 let port = argv.port || argv.host === '127.0.0.1' ? 8000 : 80
-let destinationUrl = scheme + argv.host + ':' + port
+let destinationUrl = argv.url || scheme + argv.host + ':' + port
 
 http.createServer((req, res) => {
 	for (let header in req.headers) {
