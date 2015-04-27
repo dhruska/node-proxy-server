@@ -18,9 +18,13 @@ console.log('Listening at http://127.0.0.1:8000')
 
 
 http.createServer((req, res) => {
+	let url = destinationUrl
+	if (req.headers['x-destination-url']) {
+		url = req.headers['x-destination-url']
+	}
 	let options = {
 		headers: req.headers,
-		url: destinationUrl
+		url: url + req.url
 	}
 	let destinationResponse = req.pipe(request(options))
 	destinationResponse.pipe(res)
